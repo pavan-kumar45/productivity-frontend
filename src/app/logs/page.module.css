@@ -1,0 +1,138 @@
+.container {
+    padding: 20px;
+    font-family: Arial, sans-serif;
+}
+
+.heading {
+    text-align: center;
+    margin-bottom: 20px;
+    color: white;
+}
+
+.error {
+    color: red;
+    font-size: 14px;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ddd;
+}
+
+.tab {
+    padding: 10px 20px;
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-size: 16px;
+    color: white;
+}
+
+.activeTab {
+    color: #007bff;
+    border-bottom: 2px solid #007bff;
+}
+
+.cardGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 10px;
+}
+
+.card {
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.card p {
+    margin: 10px 0;
+    color: #333;
+    font-size: 14px;
+}
+
+
+/* General Recovery Section Styles */
+.recoverySection {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Add Recovery Button Styles */
+.addButton {
+    background-color: #28a745; /* Green color for "Add Recovery Input" */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 15px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.addButton:hover {
+    background-color: #218838; /* Darker green on hover */
+}
+
+/* Edit Button Styles */
+.editButton {
+    background-color: #007bff; /* Blue color for "Edit" */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 15px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.editButton:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+
+/* Save Button Styles */
+.recoveryButton {
+    background-color: #ffc107; /* Yellow color for "Save" */
+    color: black;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 15px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.recoveryButton:hover {
+    background-color: #e0a800; /* Darker yellow on hover */
+}
+
+/* Recovery Input Styles */
+.recoveryInput {
+    width: 100%;
+    max-width: 300px;
+    padding: 8px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    transition: border-color 0.3s ease;
+}
+
+.recoveryInput:focus {
+    border-color: #007bff;
+    outline: none;
+}

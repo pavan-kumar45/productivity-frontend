@@ -1,0 +1,72 @@
+.container {
+    padding: 20px;
+    font-family: Arial, sans-serif;
+}
+
+.heading {
+    text-align: center;
+    margin-bottom: 20px;
+    color: white;
+}
+
+.tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ddd;
+    /* color: white; */
+}
+
+.tab {
+    padding: 10px 20px;
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-size: 16px;
+    color: white;
+}
+
+.activeTab {
+    color: #007bff;
+    border-bottom: 2px solid #007bff;
+}
+
+.tabContent {
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.cardContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Spacing between cards */
+}
+
+.card {
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    font-size: 16px;
+    color: #333;
+}
+
+.card:hover {
+    border-color: #007bff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.tabContent h2 {
+    color: #007bff; /* Blue color */
+    padding: 10px 15px; /* Padding around the text */
+    border-radius: 5px; /* Optional: Rounded corners */
+    background-color: #f0f8ff; /* Light blue background */
+    font-size: 20px; /* Adjust font size */
+    font-weight: bold; /* Make it bold */
+    text-align: left; /* Align to the left */
+    margin-bottom: 15px; /* Spacing below the heading */
+}   
