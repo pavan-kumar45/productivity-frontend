@@ -1,15 +1,123 @@
 'use client';
-import React, { useState , useEffect } from 'react';
-import {jwtDecode} from 'jwt-decode';
+import React, { useState, useEffect } from 'react';
+import { jwtDecode } from 'jwt-decode';
 import styles from './page.module.css';
-import HabitForm from '../../components/habits/habit-form';
-import HabitList from '../../components/habits/habit-list';
+import HabitList from '@/components/habits/habit-list.jsx';
+
+export default function HabitTracker() {
+    const [userId, setUserId] = useState(null);
+    const [habits, setHabits] = useState([]); // State to store all habits
+    const [todaysInstances, setTodaysInstances] = useState([]); // State to store today's instances
+    const [skippedInstances, setSkippedInstances] = useState([]); // State to store skipped instances
+
+    useEffect(() => {
+        const token = localStorage.getItem('authToken');
+        if (token) {
+            try {
+                const decodedToken = jwtDecode(token);
+                if (decodedToken.exp * 1000 < Date.now()) {
+                    localStorage.removeItem('authToken');
+                    return;
+                }
+                setUserId(decodedToken.sub);
+            } catch (error) {
+                localStorage.removeItem('authToken');
+            }
+        }
+    }, []);
+
+    // Fetch all habits, today's instances, and skipped instances when userId changes
+    useEffect(() => {
+        const fetchData = async () => {
+            if (!userId) return;
+
+            // Fetch all habits
+            const habitsRes = await fetch(`http://localhost:8000/get-all-habits?userId=${userId}`);
+            const habitsData = await habitsRes.json();
+            setHabits(habitsData.habits);
+
+            // Fetch today's instances
+            const todayRes = await fetch(`http://localhost:8000/get-todays-instances?userId=${userId}`);
+            const todayData = await todayRes.json();
+            setTodaysInstances(todayData.instances);
+
+            // Fetch skipped instances
+            const skippedRes = await fetch(`http://localhost:8000/get-skipped-instances?userId=${userId}`);
+            const skippedData = await skippedRes.json();
+            setSkippedInstances(skippedData.instances);
+        };
+
+        fetchData();
+    }, [userId]);
+
+    // Add a new habit
+    const addHabit = async (habit) => {
+        if (!userId) return;
+
+        try {
+            const response = await fetch('http://localhost:8000/log-habit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...habit, userId }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to log habit');
+            }
+
+            // Refresh data after adding a habit
+            const habitsRes = await fetch(`http://localhost:8000/get-all-habits?userId=${userId}`);
+            const habitsData = await habitsRes.json();
+            setHabits(habitsData.habits);
+
+            const todayRes = await fetch(`http://localhost:8000/get-todays-instances?userId=${userId}`);
+            const todayData = await todayRes.json();
+            setTodaysInstances(todayData.instances);
+        } catch (error) {
+            console.error('Error adding habit:', error);
+        }
+    };
+
+    // Delete a habit
+    const deleteHabit = async (habitId) => {
+        try {
+            const response = await fetch(`http://localhost:8000/delete-habit/${habitId}`, {
+                method: 'DELETE',
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to delete habit');
+            }
+
+            // Remove the deleted habit from the state
+            setHabits((prevHabits) => prevHabits.filter((habit) => habit._id !== habitId));
+        } catch (error) {
+            console.error('Error deleting habit:', error);
+        }
+    };
+
+    return (
+        <div className={styles.container}>
+            <h1 className={styles.heading}>Habit Tracker</h1>
+            <HabitFormComponent addHabit={addHabit} />
+            <HabitList 
+                userId={userId}
+                habits={habits}
+                todaysInstances={todaysInstances}
+                skippedInstances={skippedInstances}
+                deleteHabit={deleteHabit} // Pass deleteHabit as a prop
+                setTodaysInstances={setTodaysInstances} // Pass setTodaysInstances as a prop
+                setSkippedInstances={setSkippedInstances} 
+            />
+        </div>
+    );
+}
 
 function HabitFormComponent({ addHabit }) {
     const [title, setTitle] = useState('');
     const [repetition, setRepetition] = useState('daily');
     const [customDays, setCustomDays] = useState([]);
-    const [time, setTime] = useState(''); // Add state for optional time
+    const [time, setTime] = useState('');
 
     const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -21,7 +129,8 @@ function HabitFormComponent({ addHabit }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        addHabit({ title, repetition, customDays, time });
+        const habitTime = time || "00:00"; // Default to "00:00" if time is empty
+        addHabit({ title, repetition, customDays, time: habitTime });
         setTitle('');
         setRepetition('daily');
         setCustomDays([]);
@@ -36,6 +145,7 @@ function HabitFormComponent({ addHabit }) {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className={styles.input}
+                required
             />
             <select
                 value={repetition}
@@ -43,7 +153,6 @@ function HabitFormComponent({ addHabit }) {
                 className={styles.select}
             >
                 <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
                 <option value="custom">Custom Days</option>
             </select>
             {repetition === 'custom' && (
@@ -66,92 +175,8 @@ function HabitFormComponent({ addHabit }) {
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
                 className={styles.timeInput}
-                placeholder="Optional time"
             />
             <button type="submit" className={styles.button}>Add Habit</button>
         </form>
-    );
-}
-
-export default function HabitTracker() {
-    const [habits, setHabits] = useState([]);
-    const [userId, setUserId] = useState(null);
-
-    useEffect(() => {
-        const token = localStorage.getItem('authToken'); // Replace with your token key
-        if (token) {
-            try {
-                const decodedToken = jwtDecode(token);
-                if (decodedToken.exp * 1000 < Date.now()) {
-                    console.error('Token is expired. Redirecting to login.');
-                    localStorage.removeItem('authToken');
-                    return;
-                }
-                setUserId(decodedToken.sub); // Extract and set userId (sub)
-            } catch (error) {
-                console.error('Invalid token. Redirecting to login.', error);
-                localStorage.removeItem('authToken');
-            }
-        }
-    }, []);
-
-    // Add a new habit
-    const addHabit = async (habit) => {
-        if (!userId) {
-            console.error('User not logged in. Cannot add habits.');
-            return;
-        }
-
-        const newHabit = {
-            ...habit,
-            userId, // Include userId in the payload
-        };
-
-        try {
-            const response = await fetch('http://localhost:8000/log-habit', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(newHabit),
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to log habit');
-            }
-
-            const result = await response.json();
-            console.log('Habit logged successfully:', result);
-            setHabits([...habits, { ...habit, id: result.habitId }]);
-        } catch (error) {
-            console.error('Error logging habit:', error);
-        }
-    };
-    
-
-    // Mark habit as skipped
-    const skipHabit = (id, reason) => {
-        setHabits(
-            habits.map((habit) =>
-                habit.id === id ? { ...habit, skipped: true, reason } : habit
-            )
-        );
-    };
-
-    // Mark habit as completed
-    const completeHabit = (id) => {
-        setHabits(
-            habits.map((habit) =>
-                habit.id === id ? { ...habit, completed: true, skipped: false } : habit
-            )
-        );
-    };
-
-    return (
-        <div className={styles.container}>
-            <h1 className={styles.heading}>Habit Tracker</h1>
-            <HabitFormComponent addHabit={addHabit} />
-            <HabitList habits={habits} skipHabit={skipHabit} completeHabit={completeHabit} />
-        </div>
     );
 }
