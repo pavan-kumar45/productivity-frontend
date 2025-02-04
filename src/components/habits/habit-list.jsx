@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styles from "./page.module.css";
 
 export default function HabitList({
@@ -10,27 +10,23 @@ export default function HabitList({
     setTodaysInstances,
     setSkippedInstances, // Pass setSkippedInstances here
 }) {
-    // Fetch today's instances when an action is performed
     const fetchTodaysInstances = async () => {
         const res = await fetch(`http://localhost:8000/get-todays-instances?userId=${userId}`);
         const data = await res.json();
         setTodaysInstances(data.instances);
     };
 
-    // Fetch skipped instances
     const fetchSkippedInstances = async () => {
         const res = await fetch(`http://localhost:8000/get-skipped-instances?userId=${userId}`);
         const data = await res.json();
         setSkippedInstances(data.instances); // Update skipped instances
     };
 
-    // Fetch data when the component is mounted
     React.useEffect(() => {
         fetchTodaysInstances();
         fetchSkippedInstances(); // Fetch skipped habits when the component mounts
     }, []);
 
-    // Handle delete habit
     const handleDeleteHabit = async (habitId) => {
         const response = await fetch(`http://localhost:8000/delete-habit/${habitId}`, {
             method: "DELETE",
@@ -47,7 +43,6 @@ export default function HabitList({
 
     return (
         <div className={styles.habitSections}>
-            {/* Today's Habits Section */}
             <div className={styles.section}>
                 <h2>Today's Habits</h2>
                 <ul className={styles.list}>
@@ -56,14 +51,13 @@ export default function HabitList({
                             key={instance.habitId + instance.datetime}
                             instance={instance}
                             onAction={fetchTodaysInstances}
-                            setSkippedInstances={setSkippedInstances} // Pass setSkippedInstances here
+                            setSkippedInstances={setSkippedInstances}
                             userId={userId}
                         />
                     ))}
                 </ul>
             </div>
 
-            {/* Skipped Habits Section */}
             <div className={styles.section}>
                 <h2>Skipped Habits</h2>
                 <ul className={styles.list}>
@@ -77,7 +71,6 @@ export default function HabitList({
                 </ul>
             </div>
 
-            {/* All Habits Section */}
             <div className={styles.section}>
                 <h2>All Habits</h2>
                 <ul className={styles.list}>
@@ -103,16 +96,19 @@ export default function HabitList({
     );
 }
 
-function HabitInstance({ instance, onAction, setSkippedInstances,userId }) {
-    const [status, setStatus] = React.useState(instance.status);
-    const [reason, setReason] = React.useState(instance.reason || "");
-    const [tip, setTip] = React.useState(instance.tip || "");
+function HabitInstance({ instance, onAction, setSkippedInstances, userId }) {
+    const [status, setStatus] = useState(instance.status);
+    const [reason, setReason] = useState(instance.reason || "");
+    const [tip, setTip] = useState(instance.tip || "");
+    const [completionMethod, setCompletionMethod] = useState(""); // New state for completion method
+    const [isEditing, setIsEditing] = useState(false); // Track if we are editing or viewing the completion method
 
     // Handle marking the task as completed
     const handleComplete = async () => {
         const response = await fetch(`http://localhost:8000/complete-instance/${instance.habitId}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ completionMethod }),
         });
 
         if (response.ok) {
@@ -149,14 +145,45 @@ function HabitInstance({ instance, onAction, setSkippedInstances,userId }) {
         }
     };
 
-
     const fetchSkippedInstances = async () => {
         const res = await fetch(`http://localhost:8000/get-skipped-instances?userId=${userId}`);
         const data = await res.json();
-        setSkippedInstances(data.instances);  // Assuming setSkippedInstances is available to update the skipped instances
+        setSkippedInstances(data.instances);
     };
-    
 
+    // Handle the submission of completion method
+    const handleSubmitCompletionMethod = async () => {
+        if (completionMethod) {
+            try {
+                const response = await fetch(`http://localhost:8000/submit-completion-method`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ 
+                        habitId: instance.habitId, 
+                        completionMethod,
+                        instanceDatetime: instance.datetime 
+                    })
+                });
+
+                if (response.ok) {
+                    alert("Completion method submitted successfully!");
+                    setIsEditing(false); // Stop editing after submission
+                } else {
+                    alert("Failed to submit completion method.");
+                }
+            } catch (error) {
+                console.error("Submission error:", error);
+                alert("Error submitting completion method.");
+            }
+        } else {
+            alert("No completion method provided.");
+        }
+    };
+
+    // Handle editing of the completion method
+    const handleEditCompletionMethod = () => {
+        setIsEditing(true);
+    };
 
     return (
         <li className={styles.item}>
@@ -174,13 +201,42 @@ function HabitInstance({ instance, onAction, setSkippedInstances,userId }) {
                     </div>
                 )}
                 {status === "completed" && (
-                    <span className={styles.completed}>Completed!</span>
+                    <div>
+                        <span className={styles.completed}>Completed!</span>
+                        {isEditing ? (
+                            <div className={styles.completionMethod}>
+                                <input
+                                    type="text"
+                                    placeholder="How did you complete this task? (Optional)"
+                                    value={completionMethod || ""}
+                                    onChange={(e) => setCompletionMethod(e.target.value)} // Update state with the input value
+                                    className={styles.completionInput}
+                                />
+                                <button
+                                    onClick={handleSubmitCompletionMethod}
+                                    className={styles.submitButton}
+                                >
+                                    Submit
+                                </button>
+                            </div>
+                        ) : (
+                            <div className={styles.completionMethodText}>
+                                <span>{completionMethod || ""}</span>
+                                <button
+                                    onClick={handleEditCompletionMethod}
+                                    className={styles.editButton}
+                                >
+                                    Add Recovery input
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 )}
                 {status === "skipped" && (
                     <div className={styles.skippedInfo}>
                         <span className={styles.completed}>Skipped!</span>
                         <p>Reason: {reason}</p>
-                        <p>Tip: {tip}</p> {/* Use tip from state */}
+                        <p>Tip: {tip}</p>
                     </div>
                 )}
             </div>
