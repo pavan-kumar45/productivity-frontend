@@ -193,6 +193,7 @@ export default function Logs() {
                                     <p><strong>Status:</strong> {instance.status}</p>
                                     {instance.reason && <p><strong>Reason:</strong> {instance.reason}</p>}
                                     {instance.tip && <p><strong>Tip:</strong> {instance.tip}</p>}
+                                    {instance.recovery && <p><strong>Recovery:</strong> {instance.recovery}</p>}
                                 </div>
                             ))}
                         </div>

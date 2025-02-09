@@ -78,8 +78,8 @@ export default function HabitList({
                         <li key={habit._id} className={styles.item}>
                             <p>{habit.title}</p>
                             <p>
-                                Schedule: {habit.repetition === "daily" 
-                                    ? "Daily" 
+                                Schedule: {habit.repetition === "daily"
+                                    ? "Daily"
                                     : `Custom (${habit.customDays.join(", ")})`}
                             </p>
                             <button
@@ -102,6 +102,31 @@ function HabitInstance({ instance, onAction, setSkippedInstances, userId }) {
     const [tip, setTip] = useState(instance.tip || "");
     const [completionMethod, setCompletionMethod] = useState(""); // New state for completion method
     const [isEditing, setIsEditing] = useState(false); // Track if we are editing or viewing the completion method
+
+    // Fetch recovery text when the component mounts
+    useEffect(() => {
+        const fetchRecoveryText = async () => {
+            try {
+                const response = await fetch(`http://localhost:8000/get-all-habits?userId=${userId}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    const habit = data.habits.find(h => h._id === instance.habitId);
+                    if (habit) {
+                        const habitInstance = habit.instances.find(i => i.datetime === instance.datetime);
+                        if (habitInstance) {
+                            setCompletionMethod(habitInstance.recovery || "");
+                        }
+                    }
+                } else {
+                    console.error("Failed to fetch habits.");
+                }
+            } catch (error) {
+                console.error("Error fetching habits:", error);
+            }
+        };
+
+        fetchRecoveryText();
+    }, [instance.habitId, instance.datetime, userId]);
 
     // Handle marking the task as completed
     const handleComplete = async () => {
@@ -158,10 +183,10 @@ function HabitInstance({ instance, onAction, setSkippedInstances, userId }) {
                 const response = await fetch(`http://localhost:8000/submit-completion-method`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ 
-                        habitId: instance.habitId, 
+                    body: JSON.stringify({
+                        habitId: instance.habitId,
                         completionMethod,
-                        instanceDatetime: instance.datetime 
+                        instanceDatetime: instance.datetime
                     })
                 });
 
@@ -226,7 +251,7 @@ function HabitInstance({ instance, onAction, setSkippedInstances, userId }) {
                                     onClick={handleEditCompletionMethod}
                                     className={styles.editButton}
                                 >
-                                    Add Recovery input
+                                    {completionMethod ? "Edit" : "Add Recovery input"}
                                 </button>
                             </div>
                         )}
