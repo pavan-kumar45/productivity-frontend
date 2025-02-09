@@ -9,6 +9,7 @@ export default function HabitTracker() {
     const [habits, setHabits] = useState([]); // State to store all habits
     const [todaysInstances, setTodaysInstances] = useState([]); // State to store today's instances
     const [skippedInstances, setSkippedInstances] = useState([]); // State to store skipped instances
+    const [activeSection, setActiveSection] = useState('todaysHabits'); // New state for active section
 
     useEffect(() => {
         const token = localStorage.getItem('authToken');
@@ -96,19 +97,52 @@ export default function HabitTracker() {
         }
     };
 
+    const handleSectionClick = (section) => {
+        setActiveSection(section);
+    };
+
     return (
         <div className={styles.container}>
             <h1 className={styles.heading}>Habit Tracker</h1>
             <HabitFormComponent addHabit={addHabit} />
-            <HabitList 
-                userId={userId}
-                habits={habits}
-                todaysInstances={todaysInstances}
-                skippedInstances={skippedInstances}
-                deleteHabit={deleteHabit} // Pass deleteHabit as a prop
-                setTodaysInstances={setTodaysInstances} // Pass setTodaysInstances as a prop
-                setSkippedInstances={setSkippedInstances} 
-            />
+            {/* <div className={styles.tabs}>
+                <div
+                    className={`${styles.tab} ${activeSection === 'todaysHabits' ? styles.active : ''}`}
+                    onClick={() => handleSectionClick('todaysHabits')}
+                >
+                    Today's Habits
+                </div>
+                <div
+                    className={`${styles.tab} ${activeSection === 'skippedHabits' ? styles.active : ''}`}
+                    onClick={() => handleSectionClick('skippedHabits')}
+                >
+                    Skipped Habits
+                </div>
+                <div
+                    className={`${styles.tab} ${activeSection === 'allHabits' ? styles.active : ''}`}
+                    onClick={() => handleSectionClick('allHabits')}
+                >
+                    All Habits
+                </div>
+            </div> */}
+            <div className={`${styles.section} ${activeSection === 'todaysHabits' ? styles.active : ''}`}>
+                <HabitList
+                    userId={userId}
+                    habits={habits}
+                    todaysInstances={todaysInstances}
+                    skippedInstances={skippedInstances}
+                    deleteHabit={deleteHabit}
+                    setTodaysInstances={setTodaysInstances}
+                    setSkippedInstances={setSkippedInstances}
+                    activeSection={activeSection}
+                />
+            </div>
+            <div className={`${styles.section} ${activeSection === 'skippedHabits' ? styles.active : ''}`}>
+                {/* Render Skipped Habits */}
+            </div>
+            <div className={`${styles.section} ${activeSection === 'allHabits' ? styles.active : ''}`}>
+                {/* Render All Habits */}
+            </div>
         </div>
     );
 }

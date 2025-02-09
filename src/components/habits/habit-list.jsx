@@ -10,6 +10,21 @@ export default function HabitList({
     setTodaysInstances,
     setSkippedInstances, // Pass setSkippedInstances here
 }) {
+    const [activeTab, setActiveTab] = useState("todaysHabits");
+
+    const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+
+    const filteredHabits = habits.filter(habit => {
+        if (activeTab === "todaysHabits") {
+            return habit.date === today; // Show today's habits
+        } else if (activeTab === "skippedHabits") {
+            return habit.skipped && habit.date === today; // Show today's skipped habits
+        } else if (activeTab === "allHabits") {
+            return true; // Show all habits
+        }
+        return false;
+    });
+
     const fetchTodaysInstances = async () => {
         const res = await fetch(`http://localhost:8000/get-todays-instances?userId=${userId}`);
         const data = await res.json();
@@ -42,55 +57,84 @@ export default function HabitList({
     };
 
     return (
-        <div className={styles.habitSections}>
-            <div className={styles.section}>
-                <h2>Today's Habits</h2>
-                <ul className={styles.list}>
-                    {todaysInstances.map((instance) => (
-                        <HabitInstance
-                            key={instance.habitId + instance.datetime}
-                            instance={instance}
-                            onAction={fetchTodaysInstances}
-                            setSkippedInstances={setSkippedInstances}
-                            userId={userId}
-                        />
-                    ))}
-                </ul>
+        <div>
+            <div className={styles.tabContainer}>
+                <div
+                    className={`${styles.tab} ${activeTab === "todaysHabits" ? styles.activeTab : ""}`}
+                    onClick={() => setActiveTab("todaysHabits")}
+                >
+                    Today's Habits
+                </div>
+                <div
+                    className={`${styles.tab} ${activeTab === "skippedHabits" ? styles.activeTab : ""}`}
+                    onClick={() => setActiveTab("skippedHabits")}
+                >
+                    Skipped Habits
+                </div>
+                <div
+                    className={`${styles.tab} ${activeTab === "allHabits" ? styles.activeTab : ""}`}
+                    onClick={() => setActiveTab("allHabits")}
+                >
+                    All Habits
+                </div>
             </div>
 
-            <div className={styles.section}>
-                <h2>Skipped Habits</h2>
-                <ul className={styles.list}>
-                    {skippedInstances.map((instance) => (
-                        <li key={instance.habitId + instance.datetime} className={styles.item}>
-                            <p>{instance.title}</p>
-                            <p>Reason: {instance.reason}</p>
-                            <p>Tip: {instance.tip}</p>
-                        </li>
-                    ))}
-                </ul>
-            </div>
+            <div className={styles.habitSections}>
+                {activeTab === "todaysHabits" && (
+                    <div className={styles.section}>
+                        <h2>Today's Habits</h2>
+                        <ul className={styles.list}>
+                            {todaysInstances.map((instance) => (
+                                <HabitInstance
+                                    key={instance.habitId + instance.datetime}
+                                    instance={instance}
+                                    onAction={fetchTodaysInstances}
+                                    setSkippedInstances={setSkippedInstances}
+                                    userId={userId}
+                                />
+                            ))}
+                        </ul>
+                    </div>
+                )}
 
-            <div className={styles.section}>
-                <h2>All Habits</h2>
-                <ul className={styles.list}>
-                    {habits.map((habit) => (
-                        <li key={habit._id} className={styles.item}>
-                            <p>{habit.title}</p>
-                            <p>
-                                Schedule: {habit.repetition === "daily"
-                                    ? "Daily"
-                                    : `Custom (${habit.customDays.join(", ")})`}
-                            </p>
-                            <button
-                                onClick={() => handleDeleteHabit(habit._id)}
-                                className={styles.deleteButton}
-                            >
-                                Delete
-                            </button>
-                        </li>
-                    ))}
-                </ul>
+                {activeTab === "skippedHabits" && (
+                    <div className={styles.section}>
+                        <h2>Skipped Habits</h2>
+                        <ul className={styles.list}>
+                            {skippedInstances.map((instance) => (
+                                <li key={instance.habitId + instance.datetime} className={styles.item}>
+                                    <p>{instance.title}</p>
+                                    <p>Reason: {instance.reason}</p>
+                                    <p>Tip: {instance.tip}</p>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
+                {activeTab === "allHabits" && (
+                    <div className={styles.section}>
+                        <h2>All Habits</h2>
+                        <ul className={styles.list}>
+                            {filteredHabits.map((habit) => (
+                                <li key={habit._id} className={styles.item}>
+                                    <p>{habit.title}</p>
+                                    <p>
+                                        Schedule: {habit.repetition === "daily"
+                                            ? "Daily"
+                                            : `Custom (${habit.customDays.join(", ")})`}
+                                    </p>
+                                    <button
+                                        onClick={() => handleDeleteHabit(habit._id)}
+                                        className={styles.deleteButton}
+                                    >
+                                        Delete
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -102,31 +146,6 @@ function HabitInstance({ instance, onAction, setSkippedInstances, userId }) {
     const [tip, setTip] = useState(instance.tip || "");
     const [completionMethod, setCompletionMethod] = useState(""); // New state for completion method
     const [isEditing, setIsEditing] = useState(false); // Track if we are editing or viewing the completion method
-
-    // Fetch recovery text when the component mounts
-    useEffect(() => {
-        const fetchRecoveryText = async () => {
-            try {
-                const response = await fetch(`http://localhost:8000/get-all-habits?userId=${userId}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    const habit = data.habits.find(h => h._id === instance.habitId);
-                    if (habit) {
-                        const habitInstance = habit.instances.find(i => i.datetime === instance.datetime);
-                        if (habitInstance) {
-                            setCompletionMethod(habitInstance.recovery || "");
-                        }
-                    }
-                } else {
-                    console.error("Failed to fetch habits.");
-                }
-            } catch (error) {
-                console.error("Error fetching habits:", error);
-            }
-        };
-
-        fetchRecoveryText();
-    }, [instance.habitId, instance.datetime, userId]);
 
     // Handle marking the task as completed
     const handleComplete = async () => {

@@ -1,17 +1,32 @@
+:root {
+    --primary-color: #007bff;
+    --secondary-color: #28a745;
+    --danger-color: #dc3545;
+    --background-color: #ffffff;
+    --text-color: #000;
+    --border-radius: 12px;
+    --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
 .container {
     padding: 20px;
     max-width: 600px;
     margin: 20px auto;
-    background-color: #f9f9f9;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    background-color: var(--background-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    transition: box-shadow 0.3s;
+}
+
+.container:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 
 .heading {
     font-size: 28px;
     font-weight: bold;
     text-align: center;
-    color: #333;
+    color: var(--text-color);
     margin-bottom: 24px;
 }
 
@@ -22,26 +37,33 @@
     flex-wrap: wrap;
 }
 
-.input {
+.input, .select, .timeInput {
     flex: 1;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 6px;
+    transition: border-color 0.3s;
+    background-color: #f0f0f0;
+    color: var(--text-color);
 }
 
-.select, .timeInput {
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
+.input:focus, .select:focus, .timeInput:focus {
+    border-color: var(--primary-color);
+    outline: none;
 }
 
 .button {
     padding: 10px 20px;
-    background-color: #007bff;
+    background-color: var(--primary-color);
     color: white;
     border: none;
     border-radius: 6px;
     cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.button:hover {
+    background-color: #0056b3;
 }
 
 .list {
@@ -59,11 +81,18 @@
     border-radius: 6px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     margin-bottom: 12px;
+    transition: box-shadow 0.3s;
+    color: var(--text-color);
+}
+
+.item:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .habitName {
     font-weight: bold;
     margin: 0;
+    color: var(--text-color);
 }
 
 .habitDetails {
@@ -77,29 +106,67 @@
 }
 
 .completeButton {
-    background-color: #28a745;
+    background-color: var(--secondary-color);
     color: white;
     border: none;
     padding: 8px 16px;
     border-radius: 6px;
     cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.completeButton:hover {
+    background-color: #218838;
 }
 
 .skipButton {
-    background-color: #dc3545;
+    background-color: var(--danger-color);
     color: white;
     border: none;
     padding: 8px 16px;
     border-radius: 6px;
     cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.skipButton:hover {
+    background-color: #c82333;
 }
 
 .completed {
-    color: #28a745;
+    color: var(--secondary-color);
     font-weight: bold;
 }
 
 .reason {
-    color: #dc3545;
+    color: var(--danger-color);
     font-size: 14px;
+}
+
+.tabs {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ccc;
+}
+
+.tab {
+    padding: 10px 20px;
+    cursor: pointer;
+    color: var(--text-color);
+    transition: color 0.3s, border-bottom 0.3s;
+}
+
+.tab.active {
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.section {
+    display: none;
+    color: var(--text-color);
+}
+
+.section.active {
+    display: block;
 }
