@@ -143,6 +143,7 @@ export default function HabitList({
 function HabitInstance({ instance, onAction, setSkippedInstances, userId }) {
     const [status, setStatus] = useState(instance.status);
     const [reason, setReason] = useState(instance.reason || "");
+    const [title, setTitle] = useState(instance.title || "");
     const [tip, setTip] = useState(instance.tip || "");
     const [completionMethod, setCompletionMethod] = useState(""); // New state for completion method
     const [isEditing, setIsEditing] = useState(false); // Track if we are editing or viewing the completion method
@@ -169,7 +170,7 @@ function HabitInstance({ instance, onAction, setSkippedInstances, userId }) {
 
         if (skipReason) {
             const response = await fetch(
-                `http://localhost:8000/skip-instance/${instance.habitId}?reason=${encodeURIComponent(skipReason)}&instance_datetime=${encodeURIComponent(instanceDatetime)}`,
+                `http://localhost:8000/skip-instance/${instance.habitId}?title=${encodeURIComponent(title)}&reason=${encodeURIComponent(skipReason)}&instance_datetime=${encodeURIComponent(instanceDatetime)}`,
                 {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
@@ -229,6 +230,24 @@ function HabitInstance({ instance, onAction, setSkippedInstances, userId }) {
         setIsEditing(true);
     };
 
+    // Handle undo action
+    const handleUndo = async () => {
+        const response = await fetch(`http://localhost:8000/undo-instance/${instance.habitId}?instance_datetime=${encodeURIComponent(instance.datetime)}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" }
+        });
+    
+        if (response.ok) {
+            setStatus("pending");
+            setReason("");
+            setTip("");
+            onAction(); // Refresh the list
+            fetchSkippedInstances(); // Refresh skipped instances if needed
+        } else {
+            alert("Failed to undo the action. Please try again.");
+        }
+    };
+
     return (
         <li className={styles.item}>
             <div>
@@ -244,43 +263,52 @@ function HabitInstance({ instance, onAction, setSkippedInstances, userId }) {
                         </button>
                     </div>
                 )}
-                {status === "completed" && (
+                {(status === "completed" || status === "skipped") && (
                     <div>
-                        <span className={styles.completed}>Completed!</span>
-                        {isEditing ? (
-                            <div className={styles.completionMethod}>
-                                <input
-                                    type="text"
-                                    placeholder="How did you complete this task? (Optional)"
-                                    value={completionMethod || ""}
-                                    onChange={(e) => setCompletionMethod(e.target.value)} // Update state with the input value
-                                    className={styles.completionInput}
-                                />
-                                <button
-                                    onClick={handleSubmitCompletionMethod}
-                                    className={styles.submitButton}
-                                >
-                                    Submit
-                                </button>
-                            </div>
-                        ) : (
-                            <div className={styles.completionMethodText}>
-                                <span>{completionMethod || ""}</span>
-                                <button
-                                    onClick={handleEditCompletionMethod}
-                                    className={styles.editButton}
-                                >
-                                    {completionMethod ? "Edit" : "Add Recovery input"}
-                                </button>
+                        <span className={status === "completed" ? styles.completed : styles.skipped}>
+                            {status.charAt(0).toUpperCase() + status.slice(1)}!
+                        </span>
+                        <button onClick={handleUndo} className={styles.undoButton}>
+                            Undo
+                        </button>
+                        {status === "completed" && (
+                            <div>
+                                {isEditing ? (
+                                    <div className={styles.completionMethod}>
+                                        <input
+                                            type="text"
+                                            placeholder="How did you complete this task? (Optional)"
+                                            value={completionMethod || ""}
+                                            onChange={(e) => setCompletionMethod(e.target.value)} // Update state with the input value
+                                            className={styles.completionInput}
+                                        />
+                                        <button
+                                            onClick={handleSubmitCompletionMethod}
+                                            className={styles.submitButton}
+                                        >
+                                            Submit
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className={styles.completionMethodText}>
+                                        <span>{completionMethod || ""}</span>
+                                        <button
+                                            onClick={handleEditCompletionMethod}
+                                            className={styles.editButton}
+                                        >
+                                            {completionMethod ? "Edit" : "Add Recovery input"}
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         )}
-                    </div>
-                )}
-                {status === "skipped" && (
-                    <div className={styles.skippedInfo}>
-                        <span className={styles.completed}>Skipped!</span>
-                        <p>Reason: {reason}</p>
-                        <p>Tip: {tip}</p>
+                        {status === "skipped" && (
+                            <div className={styles.skippedInfo}>
+                                <span className={styles.completed}>Skipped!</span>
+                                <p>Reason: {reason}</p>
+                                <p>Tip: {tip}</p>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
